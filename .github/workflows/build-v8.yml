@@ -80,7 +80,7 @@ jobs:
     - name: Print env
       run: |
         echo ${{ env.v8_version }}
-        echo ${{ env.build_args_release }}
+        echo ${{ env.v8_build_args }}
 
     - name: Pack dist files
       if: github.event_name == 'release'
@@ -140,7 +140,7 @@ jobs:
     - name: Print env
       run: |
         echo ${{ env.v8_version }}
-        echo ${{ env.build_args_release }}
+        echo ${{ env.v8_build_args }}
 
     # - name: Setup GN
     #   run: |
