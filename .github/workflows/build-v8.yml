@@ -37,12 +37,17 @@ on:
         default: false
 
 
+env:
+  build_args_release: 'is_debug=false v8_use_external_startup_data=false is_official_build=true v8_enable_i18n_support=false treat_warnings_as_errors=false symbol_level=1 v8_enable_webassembly=true'
+
+
 jobs:
   android_prebuilt:
     if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - uses: actions/setup-python@v2
     - name: Check workflow input version
       if: github.event.inputs.is_build_for_windows == 'true'
@@ -53,6 +58,7 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+              f.write("v8_build_args=" + "${{ github.event.inputs.build_args }}")
 
     - name: Check release version
       if: github.event_name == 'release'
@@ -69,9 +75,11 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + result[0])
+              f.write("v8_build_args=" + "${{ env.build_args_release }})
 
-    - run: echo ${{ env.v8_version }}
-
+    - run: |
+        echo ${{ env.v8_version }}
+        echo ${{ env.build_args_release }}
 
     - name: Pack dist files
       if: github.event_name == 'release'
@@ -109,6 +117,7 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+              f.write("v8_build_args=" + "${{ github.event.inputs.build_args }}")
 
     - name: Check release version
       if: github.event_name == 'release'
@@ -125,23 +134,25 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + result[0])
+              f.write("v8_build_args=" + "${{ env.build_args_release }})
 
-    - run: echo ${{ env.v8_version }}
+    - run: |
+      echo ${{ env.v8_version }}
+      echo ${{ env.build_args_release }}
 
-    - name: Setup GN
-      run: |
-        Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
-        Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
-        rm depot_tools.zip
-    - name: Checkout v8
-      if: github.event_name == 'release'
-      run: |
-        $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
-        $env:Path += ";C:\depot_tools"
-        fetch v8 &&
-        cd v8 &&
-        git checkout ${{ env.v8_version }} &&
-        gclient sync -D
+    # - name: Setup GN
+    #   run: |
+    #     Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
+    #     Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
+    #     rm depot_tools.zip
+    # - name: Checkout v8
+    #   run: |
+    #     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+    #     $env:Path += ";C:\depot_tools"
+    #     fetch v8 &&
+    #     cd v8 &&
+    #     git checkout ${{ env.v8_version }} &&
+    #     gclient sync -D
     # - name: Generate ${{ matrix.arch }}
     #   working-directory: ./v8
     #   run: |
