@@ -57,7 +57,7 @@ jobs:
           import os
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
-              f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+              f.write("v8_version=" + "${{ github.event.inputs.v8_revision }}")
               f.write("v8_build_args=" + "${{ github.event.inputs.build_args }}")
 
     - name: Check release version
@@ -117,7 +117,7 @@ jobs:
           import os
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
-              f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+              f.write("v8_version=" + "${{ github.event.inputs.v8_revision }}")
               f.write("v8_build_args=" + "${{ github.event.inputs.build_args }}")
 
     - name: Check release version
