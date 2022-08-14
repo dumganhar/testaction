@@ -82,14 +82,14 @@ jobs:
   #       tag: ${{ github.ref }}
 
   windows_prebuilt:
-    if: github.event.inputs.is_build_for_windows == 'true'
+    if: github.event.inputs.is_build_for_windows == 'true' || github.event_name == 'release'
     runs-on: windows-2019
     strategy:
       matrix:
         # arch: [x86, x64, arm64]
         arch: [x64]
     steps:
-      - name: Check release title and content
+    - name: Check release title and content
       run: |
         chcp 65001 #set code page to utf-8
         echo title: ${{ github.event.release.title }}
