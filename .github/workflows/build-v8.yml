@@ -38,59 +38,23 @@ on:
 
 
 jobs:
-  # android_prebuilt:
-  #   if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Check release title and content
-  #     run: |
-  #       echo title: ${{ github.event.release.title }}
-  #       echo "-------"
-  #       echo name: ${{ github.event.release.name }}
-  #       echo "-------"
-  #       echo id: ${{ github.event.release.id }}
-  #       echo "-------"
-  #       echo tag_name: ${{ github.event.release.tag_name }}
-  #       echo "-------"
-  #       echo tarball_url: ${{ github.event.release.tarball_url }}
-  #       echo "-------"
-  #       echo upload_url: ${{ github.event.release.upload_url }}
-  #       echo "-------"
-  #       echo build_args: ${{ github.event.inputs.build_args }}
-  #       echo "-------"
-  #       echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
-    
-  #   - name: Read version
-  #     run: |
-  #       echo v8_version:${{ env.v8_version }}
-
-
-  #   - name: Pack dist files
-  #     if: github.event_name == 'release'
-  #     uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
-  #     with:
-  #       files: dist
-  #       dest: dist-android.zip
-
-  #   - name: Upload to Release
-  #     if: github.event_name == 'release'
-  #     uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
-  #     with:
-  #       repo_token: ${{ secrets.GITHUB_TOKEN }}
-  #       file: dist-android.zip
-  #       asset_name: dist-android.zip
-  #       tag: ${{ github.ref }}
-
-  windows_prebuilt:
-    if: github.event.inputs.is_build_for_windows == 'true' || github.event_name == 'release'
-    runs-on: windows-2019
-    strategy:
-      matrix:
-        # arch: [x86, x64, arm64]
-        arch: [x64]
+  android_prebuilt:
+    if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
+    - name: Check workflow input version
+      if: github.event.inputs.is_build_for_windows == 'true'
+      uses: jannekem/run-python-script-action@v1
+      id: script
+      with:
+        script: |
+          import os
+          env_file = os.getenv('GITHUB_ENV')
+          with open(env_file, "a") as f:
+              f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+
     - name: Check release version
       if: github.event_name == 'release'
       uses: jannekem/run-python-script-action@v1
@@ -109,6 +73,65 @@ jobs:
               f.write("v8_version=" + result[0])
 
     - run: echo ${{ env.v8_version }}
+
+
+    - name: Pack dist files
+      if: github.event_name == 'release'
+      uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
+      with:
+        files: dist
+        dest: dist-android.zip
+
+    - name: Upload to Release
+      if: github.event_name == 'release'
+      uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: dist-android.zip
+        asset_name: dist-android.zip
+        tag: ${{ github.ref }}
+
+  windows_prebuilt:
+    if: github.event.inputs.is_build_for_windows == 'true' || github.event_name == 'release'
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        # arch: [x86, x64, arm64]
+        arch: [x64]
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+    - name: Check workflow input version
+      if: github.event.inputs.is_build_for_windows == 'true'
+      uses: jannekem/run-python-script-action@v1
+      id: script
+      with:
+        script: |
+          import os
+          env_file = os.getenv('GITHUB_ENV')
+          with open(env_file, "a") as f:
+              f.write("v8_version=" + ${{ github.event.inputs.v8_revision }})
+
+    - name: Check release version
+      if: github.event_name == 'release'
+      uses: jannekem/run-python-script-action@v1
+      id: script
+      with:
+        script: |
+          import os
+          import re
+          import sys
+          pattern = r'\d+\.(?:\d+\.)*\d+'
+          result=re.findall(pattern, "${{ github.event.release.name }}")
+          if len(result) < 1:
+              sys.exit(-1)
+          env_file = os.getenv('GITHUB_ENV')
+          with open(env_file, "a") as f:
+              f.write("v8_version=" + result[0])
+
+    - run: echo ${{ env.v8_version }}
+
     - name: Setup GN
       run: |
         Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
@@ -116,6 +139,7 @@ jobs:
         rm depot_tools.zip
     - name: Checkout v8
       if: github.event_name == 'release'
+      shell: cmd
       run: |
         $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
         $env:Path += ";C:\depot_tools"
@@ -123,15 +147,6 @@ jobs:
         cd v8
         git checkout ${{ env.v8_version }}
         gclient sync -D
-    # - name: Checkout v8
-    #   if: github.event.inputs.is_build_for_windows == 'true'
-    #   run: |
-    #     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
-    #     $env:Path += ";C:\depot_tools"
-    #     fetch v8
-    #     cd v8
-    #     git checkout ${{ github.event.inputs.v8_revision }}
-    #     gclient sync -D
     # - name: Generate ${{ matrix.arch }}
     #   working-directory: ./v8
     #   run: |
