@@ -58,6 +58,13 @@ jobs:
         echo "-------"
         echo build_args: ${{ github.event.inputs.build_args }}
         echo "-------"
+        echo "v8_version=${{ github.event.release.name }} | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
+    
+    - name: Read version
+      run: |
+        echo v8_version:${{ env.v8_version }}
+
+
     - name: Pack dist files
       if: github.event_name == 'release'
       uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
