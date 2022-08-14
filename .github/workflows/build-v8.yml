@@ -45,12 +45,19 @@ jobs:
     - name: Check release title and content
       run: |
         echo ${{ github.event.release.title }}
+        echo "-------"
         echo ${{ github.event.release.name }}
+        echo "-------"
         echo ${{ github.event.release.id }}
+        echo "-------"
         echo ${{ github.event.release.tag_name }}
+        echo "-------"
         echo ${{ github.event.release.tarball_url }}
+        echo "-------"
         echo ${{ github.event.release.upload_url }}
+        echo "-------"
         echo ${{ github.event.inputs.build_args }}
+        echo "-------"
     - name: Pack dist files
       if: github.event_name == 'release'
       uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
