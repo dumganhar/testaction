@@ -77,7 +77,8 @@ jobs:
               f.write("v8_version=" + result[0])
               f.write("v8_build_args=" + "${{ env.build_args_release }})
 
-    - run: |
+    - name: Print env
+      run: |
         echo ${{ env.v8_version }}
         echo ${{ env.build_args_release }}
 
@@ -136,9 +137,10 @@ jobs:
               f.write("v8_version=" + result[0])
               f.write("v8_build_args=" + "${{ env.build_args_release }})
 
-    - run: |
-      echo ${{ env.v8_version }}
-      echo ${{ env.build_args_release }}
+    - name: Print env
+      run: |
+        echo ${{ env.v8_version }}
+        echo ${{ env.build_args_release }}
 
     # - name: Setup GN
     #   run: |
