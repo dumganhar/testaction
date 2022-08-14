@@ -75,7 +75,7 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + result[0])
-              f.write("v8_build_args=" + "${{ env.build_args_release }})
+              f.write("v8_build_args=" + "${{ env.build_args_release }}")
 
     - name: Print env
       run: |
@@ -137,7 +137,7 @@ jobs:
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
               f.write("v8_version=" + result[0])
-              f.write("v8_build_args=" + "${{ env.build_args_release }})
+              f.write("v8_build_args=" + "${{ env.build_args_release }}")
 
     - name: Print env
       run: |
