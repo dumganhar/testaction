@@ -38,12 +38,60 @@ on:
 
 
 jobs:
-  android_prebuilt:
-    if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
-    runs-on: ubuntu-latest
+  # android_prebuilt:
+  #   if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check release title and content
+  #     run: |
+  #       echo title: ${{ github.event.release.title }}
+  #       echo "-------"
+  #       echo name: ${{ github.event.release.name }}
+  #       echo "-------"
+  #       echo id: ${{ github.event.release.id }}
+  #       echo "-------"
+  #       echo tag_name: ${{ github.event.release.tag_name }}
+  #       echo "-------"
+  #       echo tarball_url: ${{ github.event.release.tarball_url }}
+  #       echo "-------"
+  #       echo upload_url: ${{ github.event.release.upload_url }}
+  #       echo "-------"
+  #       echo build_args: ${{ github.event.inputs.build_args }}
+  #       echo "-------"
+  #       echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
+    
+  #   - name: Read version
+  #     run: |
+  #       echo v8_version:${{ env.v8_version }}
+
+
+  #   - name: Pack dist files
+  #     if: github.event_name == 'release'
+  #     uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
+  #     with:
+  #       files: dist
+  #       dest: dist-android.zip
+
+  #   - name: Upload to Release
+  #     if: github.event_name == 'release'
+  #     uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+  #     with:
+  #       repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #       file: dist-android.zip
+  #       asset_name: dist-android.zip
+  #       tag: ${{ github.ref }}
+
+  windows_prebuilt:
+    if: github.event.inputs.is_build_for_windows == 'true'
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        # arch: [x86, x64, arm64]
+        arch: [x64]
     steps:
-    - name: Check release title and content
+      - name: Check release title and content
       run: |
+        chcp 65001 #set code page to utf-8
         echo title: ${{ github.event.release.title }}
         echo "-------"
         echo name: ${{ github.event.release.name }}
@@ -58,87 +106,56 @@ jobs:
         echo "-------"
         echo build_args: ${{ github.event.inputs.build_args }}
         echo "-------"
-        echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
-    
-    - name: Read version
-      run: |
-        echo v8_version:${{ env.v8_version }}
-
-
-    - name: Pack dist files
-      if: github.event_name == 'release'
-      uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
-      with:
-        files: dist
-        dest: dist-android.zip
-
-    - name: Upload to Release
-      if: github.event_name == 'release'
-      uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: dist-android.zip
-        asset_name: dist-android.zip
-        tag: ${{ github.ref }}
-
-  # windows_prebuilt:
-  #   if: github.event.inputs.is_build_for_windows == 'true'
-  #   runs-on: windows-2019
-  #   strategy:
-  #     matrix:
-  #       # arch: [x86, x64, arm64]
-  #       arch: [x64]
-  #   steps:
-  #   - name: Setup GN
-  #     run: |
-  #       Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
-  #       Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
-  #       rm depot_tools.zip
-  #   - name: Checkout v8
-  #     run: |
-  #       $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
-  #       $env:Path += ";C:\depot_tools"
-  #       fetch v8
-  #       cd v8
-  #       git checkout ${{ github.event.inputs.v8_revision }}
-  #       gclient sync -D
-  #   - name: Generate ${{ matrix.arch }}
-  #     working-directory: ./v8
-  #     run: |
-  #       $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
-  #       $env:Path += ";C:\depot_tools"
-  #       gn gen out --args="target_cpu=""""""${{ matrix.arch }}"""""" v8_target_cpu=""""""${{ matrix.arch }}"""""" is_component_build=false v8_monolithic=true chrome_pgo_phase=0 ${{ github.event.inputs.build_args }}"
-  #   - name: Compile ${{ matrix.arch }}
-  #     working-directory: ./v8
-  #     run: |
-  #       $env:Path += ";C:\depot_tools"
-  #       ninja -C out v8_monolith
-  #   - name: Prepare package
-  #     working-directory: ./v8/out
-  #     run: |
-  #       New-Item -type directory -Path artifact/include/v8, artifact/lib
-  #       Copy-Item obj/v8_monolith.lib artifact/lib
-  #       Copy-Item -r ../include/* artifact/include/v8/
-  #       Copy-Item -r gen/include/* artifact/include/v8/
-  #       Get-ChildItem -Exclude *.h -Recurse -File -Path artifact/include/v8 | Remove-Item
-  #   - name: Release package
-  #     id: release_package
-  #     working-directory: ./v8
-  #     run: |
-  #       Write-Output "::set-output name=head_full::$(git rev-parse HEAD)"
-  #       cd out
-  #       Compress-Archive -Path artifact\* -DestinationPath windows-${{ matrix.arch }}.zip
-  #   # - name: Install Requirement
-  #   #   shell: bash
-  #   #   run: |
-  #   #     pip install -U cos-python-sdk-v5
-  #   # - name: Publish package
-  #   #   shell: python
-  #   #   env:
-  #   #     local_file: ./v8/out/windows-${{ matrix.arch }}.zip
-  #   #     cos_key: hippy/${{ github.event.inputs.hip_v8_root }}/v8/${{ github.event.inputs.package_tag }}/windows-${{ matrix.arch }}.zip
-  #   #     v8_head: ${{ steps.release_package.outputs.head_full
-  #   #   run: ${{ env.publish_package_script }}
+    # - name: Setup GN
+    #   run: |
+    #     Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
+    #     Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
+    #     rm depot_tools.zip
+    # - name: Checkout v8
+    #   run: |
+    #     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+    #     $env:Path += ";C:\depot_tools"
+    #     fetch v8
+    #     cd v8
+    #     git checkout ${{ github.event.inputs.v8_revision }}
+    #     gclient sync -D
+    # - name: Generate ${{ matrix.arch }}
+    #   working-directory: ./v8
+    #   run: |
+    #     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+    #     $env:Path += ";C:\depot_tools"
+    #     gn gen out --args="target_cpu=""""""${{ matrix.arch }}"""""" v8_target_cpu=""""""${{ matrix.arch }}"""""" is_component_build=false v8_monolithic=true chrome_pgo_phase=0 ${{ github.event.inputs.build_args }}"
+    # - name: Compile ${{ matrix.arch }}
+    #   working-directory: ./v8
+    #   run: |
+    #     $env:Path += ";C:\depot_tools"
+    #     ninja -C out v8_monolith
+    # - name: Prepare package
+    #   working-directory: ./v8/out
+    #   run: |
+    #     New-Item -type directory -Path artifact/include/v8, artifact/lib
+    #     Copy-Item obj/v8_monolith.lib artifact/lib
+    #     Copy-Item -r ../include/* artifact/include/v8/
+    #     Copy-Item -r gen/include/* artifact/include/v8/
+    #     Get-ChildItem -Exclude *.h -Recurse -File -Path artifact/include/v8 | Remove-Item
+    # - name: Release package
+    #   id: release_package
+    #   working-directory: ./v8
+    #   run: |
+    #     Write-Output "::set-output name=head_full::$(git rev-parse HEAD)"
+    #     cd out
+    #     Compress-Archive -Path artifact\* -DestinationPath windows-${{ matrix.arch }}.zip
+    # - name: Install Requirement
+    #   shell: bash
+    #   run: |
+    #     pip install -U cos-python-sdk-v5
+    # - name: Publish package
+    #   shell: python
+    #   env:
+    #     local_file: ./v8/out/windows-${{ matrix.arch }}.zip
+    #     cos_key: hippy/${{ github.event.inputs.hip_v8_root }}/v8/${{ github.event.inputs.package_tag }}/windows-${{ matrix.arch }}.zip
+    #     v8_head: ${{ steps.release_package.outputs.head_full
+    #   run: ${{ env.publish_package_script }}
 
   # macos_prebuilt:
   #   if: github.event.inputs.is_build_for_macos == 'true'
