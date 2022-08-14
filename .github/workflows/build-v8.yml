@@ -47,9 +47,9 @@ jobs:
     - name: Check workflow input version
       if: github.event.inputs.is_build_for_windows == 'true'
       uses: jannekem/run-python-script-action@v1
-      id: script
+      id: script_id_workflow
       with:
-        script: |
+        script_id_workflow: |
           import os
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
@@ -58,9 +58,9 @@ jobs:
     - name: Check release version
       if: github.event_name == 'release'
       uses: jannekem/run-python-script-action@v1
-      id: script
+      id: script_id_release
       with:
-        script: |
+        script_id_release: |
           import os
           import re
           import sys
@@ -102,12 +102,12 @@ jobs:
     - uses: actions/checkout@v2
 
     - uses: actions/setup-python@v2
-    - name: Check workflow input version
+        - name: Check workflow input version
       if: github.event.inputs.is_build_for_windows == 'true'
       uses: jannekem/run-python-script-action@v1
-      id: script
+      id: script_id_workflow
       with:
-        script: |
+        script_id_workflow: |
           import os
           env_file = os.getenv('GITHUB_ENV')
           with open(env_file, "a") as f:
@@ -116,9 +116,9 @@ jobs:
     - name: Check release version
       if: github.event_name == 'release'
       uses: jannekem/run-python-script-action@v1
-      id: script
+      id: script_id_release
       with:
-        script: |
+        script_id_release: |
           import os
           import re
           import sys
