@@ -44,19 +44,19 @@ jobs:
     steps:
     - name: Check release title and content
       run: |
-        echo ${{ github.event.release.title }}
+        echo title: ${{ github.event.release.title }}
         echo "-------"
-        echo ${{ github.event.release.name }}
+        echo name: ${{ github.event.release.name }}
         echo "-------"
-        echo ${{ github.event.release.id }}
+        echo id: ${{ github.event.release.id }}
         echo "-------"
-        echo ${{ github.event.release.tag_name }}
+        echo tag_name: ${{ github.event.release.tag_name }}
         echo "-------"
-        echo ${{ github.event.release.tarball_url }}
+        echo tarball_url: ${{ github.event.release.tarball_url }}
         echo "-------"
-        echo ${{ github.event.release.upload_url }}
+        echo upload_url: ${{ github.event.release.upload_url }}
         echo "-------"
-        echo ${{ github.event.inputs.build_args }}
+        echo build_args: ${{ github.event.inputs.build_args }}
         echo "-------"
     - name: Pack dist files
       if: github.event_name == 'release'
