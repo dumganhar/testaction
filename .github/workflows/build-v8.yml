@@ -96,19 +96,14 @@ jobs:
       with:
         # fail-on-error: false
         script: |
-          print("Doing something that will fail")
+          import os
           release_title = "${{ github.event.release.name }}"
           print('release_title: ' + release_title)
-          a = []
-          a[10]
-    - name: Print errors
-      if: steps.script.outputs.error == 'true'
-      run: |
-        printenv "SCRIPT_STDOUT"
-        printenv "SCRIPT_STDERR"
-      env:
-        SCRIPT_STDOUT: ${{ steps.script.outputs.stdout }}
-        SCRIPT_STDERR: ${{ steps.script.outputs.stderr }}
+          env_file = os.getenv('GITHUB_ENV')
+          with open(env_file, "a") as myfile:
+              myfile.write("hello=myworld")
+
+    - run: echo ${{ env.hello }}
     # - name: Check release title and content
     #   shell: bash
     #   run: |
