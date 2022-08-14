@@ -94,16 +94,18 @@ jobs:
     - uses: jannekem/run-python-script-action@v1
       id: script
       with:
-        # fail-on-error: false
         script: |
           import os
-          release_title = "${{ github.event.release.name }}"
-          print('release_title: ' + release_title)
+          import re
+          pattern = r'\d+\.(?:\d+\.)*\d+'
+          result=re.findall(pattern, "${{ github.event.release.name }}")
+          if len(result) < 1:
+              sys.exit(-1)
           env_file = os.getenv('GITHUB_ENV')
-          with open(env_file, "a") as myfile:
-              myfile.write("hello=myworld")
+          with open(env_file, "a") as f:
+              f.write("v8_version=" + result[0])
 
-    - run: echo ${{ env.hello }}
+    - run: echo ${{ env.v8_version }}
     # - name: Check release title and content
     #   shell: bash
     #   run: |
