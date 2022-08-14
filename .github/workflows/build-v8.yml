@@ -84,6 +84,11 @@ jobs:
         echo "${{ env.v8_build_args }}"
         echo "------"
 
+    - name: Test start with version
+      if: ${{ startsWith(env.v8_version, '7.7') }}
+      run: |
+        echo "start with 7.7"
+
     - name: Pack dist files
       if: github.event_name == 'release'
       uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
@@ -145,6 +150,11 @@ jobs:
         echo "------"
         echo "${{ env.v8_build_args }}"
         echo "------"
+
+    - name: Test start with version
+      if: ${{ startsWith(env.v8_version, '7.7') }}
+      run: |
+        echo "start with 7.7"
 
     # - name: Setup GN
     #   run: |
