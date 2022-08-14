@@ -91,12 +91,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - uses: jannekem/run-python-script-action@v1
+    - name: Check release version
+      if: github.event_name == 'release'
+      uses: jannekem/run-python-script-action@v1
       id: script
       with:
         script: |
           import os
           import re
+          import sys
           pattern = r'\d+\.(?:\d+\.)*\d+'
           result=re.findall(pattern, "${{ github.event.release.name }}")
           if len(result) < 1:
@@ -106,35 +109,22 @@ jobs:
               f.write("v8_version=" + result[0])
 
     - run: echo ${{ env.v8_version }}
-    # - name: Check release title and content
-    #   shell: bash
-    #   run: |
-    #     echo title: ${{ github.event.release.title }}
-    #     echo "-------"
-    #     echo name: ${{ github.event.release.name }}
-    #     echo "-------"
-    #     echo id: ${{ github.event.release.id }}
-    #     echo "-------"
-    #     echo tag_name: ${{ github.event.release.tag_name }}
-    #     echo "-------"
-    #     echo tarball_url: ${{ github.event.release.tarball_url }}
-    #     echo "-------"
-    #     echo build_args: ${{ github.event.inputs.build_args }}
-    #     echo "-------"
-    #     echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
-    #     echo "-----"
-    #     cat $GITHUB_ENV
-    #     echo "-----"
-    # - name: Read version
-    #   run: |
-    #     echo v8_version:${{ env.v8_version }}
-
-    # - name: Setup GN
-    #   run: |
-    #     Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
-    #     Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
-    #     rm depot_tools.zip
+    - name: Setup GN
+      run: |
+        Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
+        Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
+        rm depot_tools.zip
+    - name: Checkout v8
+      if: github.event_name == 'release'
+      run: |
+        $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+        $env:Path += ";C:\depot_tools"
+        fetch v8
+        cd v8
+        git checkout ${{ env.v8_version }}
+        gclient sync -D
     # - name: Checkout v8
+    #   if: github.event.inputs.is_build_for_windows == 'true'
     #   run: |
     #     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
     #     $env:Path += ";C:\depot_tools"
