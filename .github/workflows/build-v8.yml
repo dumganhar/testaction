@@ -97,6 +97,8 @@ jobs:
         # fail-on-error: false
         script: |
           print("Doing something that will fail")
+          release_title = ${{ github.event.release.name }}
+          print('release_title: ' + release_title)
           a = []
           a[10]
     - name: Print errors
