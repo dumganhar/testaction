@@ -1,4 +1,4 @@
-name: '[3rd] prebuilt v8'
+name: 'build v8'
 
 on:
   release:
