@@ -1,0 +1,179 @@
+name: '[3rd] prebuilt v8'
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      v8_revision:
+        description: 'V8 TAG(Branch) to build'
+        type: string
+        default: '10.4.132.22'
+        required: true
+      build_args:
+        description: 'Build args'
+        type: string
+        default: 'is_debug=false v8_use_external_startup_data=false is_official_build=true v8_enable_i18n_support=false treat_warnings_as_errors=false symbol_level=1 v8_enable_webassembly=false'
+        required: true
+      is_build_for_android:
+        description: 'Build for Android platform'
+        type: boolean
+        default: true
+      is_build_for_ios:
+        description: 'Build for iOS platform'
+        type: boolean
+        default: false
+      is_build_for_windows:
+        description: 'Build for Windows platform'
+        type: boolean
+        default: false
+      is_build_for_macos:
+        description: 'Build for MacOS platform'
+        type: boolean
+        default: false
+      is_build_for_linux:
+        description: 'Build for Linux platform'
+        type: boolean
+        default: false
+
+
+jobs:
+  android_prebuilt:
+    if: github.event.inputs.is_build_for_android == 'true' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check release title and content
+      run: |
+        echo ${{ github.event.release.title }}
+        echo ${{ github.event.release.name }}
+        echo ${{ github.event.release.id }}
+        echo ${{ github.event.release.tag_name }}
+        echo ${{ github.event.release.tarball_url }}
+        echo ${{ github.event.release.upload_url }}
+        echo ${{ github.event.inputs.build_args }}
+
+  # windows_prebuilt:
+  #   if: github.event.inputs.is_build_for_windows == 'true'
+  #   runs-on: windows-2019
+  #   strategy:
+  #     matrix:
+  #       # arch: [x86, x64, arm64]
+  #       arch: [x64]
+  #   steps:
+  #   - name: Setup GN
+  #     run: |
+  #       Invoke-WebRequest -OutFile depot_tools.zip https://storage.googleapis.com/chrome-infra/depot_tools.zip
+  #       Expand-Archive depot_tools.zip -DestinationPath C:\depot_tools
+  #       rm depot_tools.zip
+  #   - name: Checkout v8
+  #     run: |
+  #       $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+  #       $env:Path += ";C:\depot_tools"
+  #       fetch v8
+  #       cd v8
+  #       git checkout ${{ github.event.inputs.v8_revision }}
+  #       gclient sync -D
+  #   - name: Generate ${{ matrix.arch }}
+  #     working-directory: ./v8
+  #     run: |
+  #       $env:DEPOT_TOOLS_WIN_TOOLCHAIN = 0
+  #       $env:Path += ";C:\depot_tools"
+  #       gn gen out --args="target_cpu=""""""${{ matrix.arch }}"""""" v8_target_cpu=""""""${{ matrix.arch }}"""""" is_component_build=false v8_monolithic=true chrome_pgo_phase=0 ${{ github.event.inputs.build_args }}"
+  #   - name: Compile ${{ matrix.arch }}
+  #     working-directory: ./v8
+  #     run: |
+  #       $env:Path += ";C:\depot_tools"
+  #       ninja -C out v8_monolith
+  #   - name: Prepare package
+  #     working-directory: ./v8/out
+  #     run: |
+  #       New-Item -type directory -Path artifact/include/v8, artifact/lib
+  #       Copy-Item obj/v8_monolith.lib artifact/lib
+  #       Copy-Item -r ../include/* artifact/include/v8/
+  #       Copy-Item -r gen/include/* artifact/include/v8/
+  #       Get-ChildItem -Exclude *.h -Recurse -File -Path artifact/include/v8 | Remove-Item
+  #   - name: Release package
+  #     id: release_package
+  #     working-directory: ./v8
+  #     run: |
+  #       Write-Output "::set-output name=head_full::$(git rev-parse HEAD)"
+  #       cd out
+  #       Compress-Archive -Path artifact\* -DestinationPath windows-${{ matrix.arch }}.zip
+  #   # - name: Install Requirement
+  #   #   shell: bash
+  #   #   run: |
+  #   #     pip install -U cos-python-sdk-v5
+  #   # - name: Publish package
+  #   #   shell: python
+  #   #   env:
+  #   #     local_file: ./v8/out/windows-${{ matrix.arch }}.zip
+  #   #     cos_key: hippy/${{ github.event.inputs.hip_v8_root }}/v8/${{ github.event.inputs.package_tag }}/windows-${{ matrix.arch }}.zip
+  #   #     v8_head: ${{ steps.release_package.outputs.head_full
+  #   #   run: ${{ env.publish_package_script }}
+
+  # macos_prebuilt:
+  #   if: github.event.inputs.is_build_for_macos == 'true'
+  #   runs-on: macos-latest
+  #   strategy:
+  #     matrix:
+  #       arch: [x64, arm64]
+  #   steps:
+  #   - name: Setup GN
+  #     run: |
+  #       git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/local/opt/depot_tools
+  #       export PATH=/usr/local/opt/depot_tools:$PATH
+  #   - name: Checkout v8
+  #     run: |
+  #       export PATH=/usr/local/opt/depot_tools:$PATH
+  #       fetch v8
+  #       cd v8
+  #       git checkout ${{ github.event.inputs.v8_revision }}
+  #       gclient sync -D
+  #   - name: Fetch patch
+  #     uses: actions/checkout@v2
+  #     with:
+  #       path: ${{ github.repository }}
+  #   - name: Apply std::same compiler error
+  #     if: ${{ startsWith(github.event.inputs.v8_revision, '10.4') }}
+  #     working-directory: ./v8/
+  #     run: |
+  #       pwd
+  #       git apply ../${{ github.repository }}/.github/workflows/tools/v8_10_4_simd.patch
+  #   - name: Generate ${{ matrix.arch }}
+  #     working-directory: ./v8
+  #     run: |
+  #       export PATH=/usr/local/opt/depot_tools:$PATH
+  #       gn gen out --args="target_cpu=\"${{ matrix.arch }}\" v8_target_cpu=\"${{ matrix.arch }}\" chrome_pgo_phase=0 is_component_build=false v8_monolithic=true ${{ github.event.inputs.build_args }}"
+  #   - name: Compile ${{ matrix.arch }}
+  #     working-directory: ./v8
+  #     run: |
+  #       export PATH=/usr/local/opt/depot_tools:$PATH
+  #       ninja -C out v8_monolith
+  #   - name: Prepare package
+  #     working-directory: ./v8/out
+  #     run: |
+  #       mkdir -p artifact/include/v8 artifact/lib
+  #       cp obj/libv8_monolith.a artifact/lib
+  #       cp -r ../include/* artifact/include/v8/
+  #       cp -r gen/include/* artifact/include/v8/
+  #       find artifact/include/v8/. ! -name "*.h" -type f -delete
+  #   - name: Release package
+  #     id: release_package
+  #     working-directory: ./v8
+  #     run: |
+  #       echo "::set-output name=head_full::$(git rev-parse HEAD)"
+  #       cd out
+  #       tar -zcvf macos-${{ matrix.arch }}.tgz -C artifact .
+  #   # - name: Install Requirement
+  #   #   shell: bash
+  #   #   run: |
+  #   #     pip install -U cos-python-sdk-v5
+  #   # - name: Publish package
+  #   #   shell: python
+  #   #   env:
+  #   #     local_file: ./v8/out/macos-${{ matrix.arch }}.tgz
+  #   #     cos_key: hippy/${{ github.event.inputs.hip_v8_root }}/v8/${{ github.event.inputs.package_tag }}/macos-${{ matrix.arch }}.tgz
+  #   #     v8_head: ${{ steps.release_package.outputs.head_full }}
+  #   #   run: ${{ env.publish_package_script }}
+
+
