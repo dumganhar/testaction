@@ -104,7 +104,10 @@ jobs:
         echo "-------"
         echo build_args: ${{ github.event.inputs.build_args }}
         echo "-------"
-        echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $env:GITHUB_ENV
+        echo "v8_version=${{ github.event.release.name }} | sed 's/.*version=\([0-9.]*\).*/\1/'" >> $GITHUB_ENV
+        echo "-----"
+        cat $GITHUB_ENV
+        echo "-----"
     - name: Read version
       run: |
         echo v8_version:${{ env.v8_version }}
