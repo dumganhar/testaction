@@ -17,12 +17,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            {
-              await github.octokit.repos.updateRelease({
-                context.repo.owner,
-                context.repo.repo,
-                release_id: `${{ github.event.release.id }}`,
-                name: 'New name',
-                body: 'Your updated release description goes here.'
-              });
-            }
+            await github.rest.repos.updateRelease({
+              context.repo.owner,
+              context.repo.repo,
+              release_id: '2.1.7' //`${{ github.event.release.id }}`,
+              name: 'New name',
+              body: 'Your updated release description goes here.'
+            });
