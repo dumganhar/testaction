@@ -15,12 +15,11 @@ jobs:
       - name: Update Release Information
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: `${{ github.event.release.id }}`,
-              name: 'New name',
-              body: 'Your updated release description goes here.'
+              name: 'Haha',
+              body: 'hello owrld.'
             });
