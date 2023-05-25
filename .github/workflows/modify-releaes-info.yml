@@ -21,7 +21,7 @@ jobs:
               const { owner, repo } = context.repo;
               const { release } = context.payload;
 
-              const octokit = getOctokit(process.env.GITHUB_TOKEN);
+              const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
               const { data: existingRelease } = await octokit.repos.getReleaseByTag({
                 owner,
                 repo,
