@@ -18,9 +18,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             {
-              await octokit.repos.updateRelease({
-                owner,
-                repo,
+              await github.octokit.repos.updateRelease({
+                context.repo.owner,
+                context.repo.repo,
                 release_id: `${{ github.event.release.id }}`,
                 name: 'New name',
                 body: 'Your updated release description goes here.'
