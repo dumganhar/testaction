@@ -17,7 +17,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const version = 0.8.40;// env.RENDER_SERVICE_VERSION;
+            const version = '0.8.40';// env.RENDER_SERVICE_VERSION;
             const urlPrefix = `http://ftp.cocos.org/TestBuilds/CocosRenderService/`;
             const package1 = urlPrefix + version + 'CocosRenderServicePackage-' + version + '.zip';
             const package2 = urlPrefix + version + 'CocosRenderDebugPackage-' + version + '.zip';
