@@ -14,12 +14,9 @@ jobs:
 
       - name: Update Release Information
       - uses: actions/github-script@v6
-          env:
-            RELEASE_ID: ${{ github.event.release.id }}
-
           with:
             script: |
-              const { RELEASE_ID } = process.env
+              const RELEASE_ID = ${{ github.event.release.id }}
               
               octokit.rest.repos.updateRelease({
                 owner: context.repo.owner,
