@@ -13,13 +13,18 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Update Release Information
+        if: github.event_name == 'release'
         uses: actions/github-script@v6
         with:
           script: |
+            const version = 0.8.40;// env.RENDER_SERVICE_VERSION;
+            const urlPrefix = `http://ftp.cocos.org/TestBuilds/CocosRenderService/`;
+            const package1 = urlPrefix + version + 'CocosRenderServicePackage-' + version + '.zip';
+            const package2 = urlPrefix + version + 'CocosRenderDebugPackage-' + version + '.zip';
+            const content = package1 + '\n' + package2;
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: `${{ github.event.release.id }}`,
-              name: 'Haha',
-              body: 'hello owrld.'
+              body: content
             });
