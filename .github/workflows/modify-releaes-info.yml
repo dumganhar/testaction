@@ -1,0 +1,36 @@
+name: Update Release Information
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_release_information:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Update Release Information
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const { release } = context.payload;
+
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const { data: existingRelease } = await octokit.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag: release.tag_name
+            });
+
+            await octokit.repos.updateRelease({
+              owner,
+              repo,
+              release_id: existingRelease.id,
+              name: release.tag_name,
+              body: 'Your updated release description goes here.'
+            });
